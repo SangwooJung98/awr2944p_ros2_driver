@@ -17,11 +17,11 @@ TI **AWR2944PEVM / AWR2944P**의 DDM 포인트클라우드를 ROS 2 `PointCloud2
 | RViz | Doppler `velocity` 색상, Decay Time `0` |
 | 재생·자동 테스트 | 합성 UART 데이터 80프레임·2,400포인트. 센서 없이 실행 가능 |
 
-Ethernet 포인트 수신은 실물 보드에서 확인했습니다. USB-LAN 분리와 USB 오류 `-71`로 연속 측정이 중단된 사례가 있어 장시간 안정성은 보장하지 않습니다. 각도·거리의 절대 정확도와 개별 보드 보정은 검증 범위에 포함되지 않습니다. AWR2944, AWR2E44P, AWR1843, IWR6843에 이 cfg를 그대로 사용하지 마세요.
+Ethernet 포인트 수신은 실물 보드에서 확인했습니다. 각도·거리의 절대 정확도와 개별 보드 보정은 검증 범위에 포함되지 않습니다. AWR2944, AWR2E44P, AWR1843, IWR6843에 이 cfg를 그대로 사용하지 마세요.
 
 ## 1. 설치와 빌드
 
-[ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)가 설치된 Ubuntu에서 실행합니다.
+[ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)가 설치된 **Ubuntu 24.04**에서 실행합니다. ROS 설치는 `ros-jazzy-desktop` 또는 `ros-jazzy-ros-base`를 사용하며, RViz 등 패키지 의존성은 아래 `rosdep install`이 설치합니다. RViz 창을 보려면 GUI 세션이 필요합니다. Ethernet 실행 스크립트는 systemd가 실행 중인 Ubuntu와 sudo를 사용합니다. NIC 설정 예제는 NetworkManager의 `nmcli` 기준입니다.
 
 ```bash
 sudo apt update
@@ -36,8 +36,9 @@ source /opt/ros/jazzy/setup.bash
 rosdep을 처음 사용하는 PC는 `sudo rosdep init`을 한 번 실행합니다. 이후:
 
 ```bash
-rosdep update
+rosdep update --rosdistro jazzy
 rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
+rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro jazzy
 cd ros2_ws
 colcon build --symlink-install --packages-select awr2944_driver
 source install/setup.bash
@@ -53,13 +54,34 @@ export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
 
 `LOCALHOST`는 같은 PC에서 노드와 RViz를 실행하는 예제용입니다. 다른 PC와 DDS로 통신하려면 양쪽의 ROS 도메인과 discovery 설정을 맞춥니다.
 
+### 다른 PC에서 사용할 때
+
+소스·launch·cfg·RViz 설정·합성 재생 데이터는 모두 저장소에 포함됩니다. 빌드 산출물은 새 PC에서 생성합니다. 드라이버 실행에는 이 개발 PC의 파일이나 TI SDK 설치 경로가 필요하지 않습니다. TI 펌웨어 바이너리는 포함하지 않으므로, 보드에는 사용할 전송 방식에 맞는 펌웨어가 먼저 있어야 합니다. 같은 보드를 다른 PC로 옮기는 경우 펌웨어를 다시 쓸 필요는 없습니다.
+
+| 새 PC에서 확인할 값 | 설정 방법 |
+|---|---|
+| 저장소 위치 | 예제의 `~/radar_projects/awr2944p_ros2_driver`를 실제 clone 경로로 변경 |
+| CLI·데이터 UART | 실제 `/dev/ttyACM*` 또는 `/dev/serial/by-id/...`를 `cli_port`, `data_port`로 지정 |
+| 시리얼 접근 권한 | 새 PC 사용자에게 `dialout` 권한 부여 후 재로그인 |
+| 센서용 NIC | 해당 PC의 NIC 이름을 선택하고 `192.168.1.10/24` 설정 |
+| 센서 네트워크 | 다른 NIC/VPN과 `192.168.1.0/24`가 겹치지 않는 환경, 센서에서 PC로 들어오는 TCP 7 허용 |
+| ROS 터미널 | ROS와 이번 clone의 `install/setup.bash`를 source하고 같은 ROS_DOMAIN_ID 사용 |
+
+`/dev/ttyACM0`, `/dev/ttyACM1`과 IP는 예제 기본값입니다. NIC의 MAC 주소나 보드의 USB 시리얼 번호는 코드에 고정되어 있지 않습니다. 이 안내의 검증 대상은 Ubuntu 24.04 / ROS 2 Jazzy이며 Windows·macOS·다른 ROS 배포판은 검증하지 않았습니다.
+
 ## 2. 센서 없이 RViz 확인
 
 ```bash
-ros2 launch awr2944_driver replay.launch.py
+ros2 launch awr2944_driver replay.launch.py replay_loop:=true
 ```
 
 합성 포인트가 10 Hz로 반복 표시됩니다. 실제 레이더 측정이 아닙니다. 이 예제로 ROS 설치, 메시지, 좌표축, RViz 설정을 먼저 확인할 수 있습니다.
+
+GUI 없이 설치 파일·launch·ROS 포인트 수신을 점검하려면 저장소 루트에서 다음을 실행합니다. 실제 센서와 통신하지 않고 별도 ROS 도메인 174에서 재생 후 자동 종료합니다.
+
+```bash
+python3 tools/check_install.py
+```
 
 ## 3. 보드 연결과 USB 권한
 
@@ -116,7 +138,7 @@ sudo nmcli connection up awr2944-radar
 ping -c 3 192.168.1.200
 ```
 
-USB-LAN을 교체하면 NIC 이름도 달라집니다. 새 NIC에 프로필을 지정해야 합니다. 방화벽이 활성화된 PC는 센서 NIC에서 레이더가 보내는 TCP 포트 7 연결을 허용해야 합니다.
+방화벽이 활성화된 PC는 센서 NIC에서 레이더가 보내는 TCP 포트 7 연결을 허용해야 합니다. `nmcli`가 없는 PC는 NetworkManager를 설치하거나 해당 PC의 네트워크 관리 도구에서 같은 고정 IP와 기본 경로 없음 설정을 적용합니다.
 
 ### 드라이버 시작
 
@@ -186,6 +208,7 @@ CLI 115200 bps, 데이터 UART 3125000 bps를 사용합니다. USB 예제 cfg의
 같은 cfg 파일을 수정할 때는 **측정 정지 → 파일 저장 → 보드 리셋 → `/radar/start`** 순서입니다. `--symlink-install`로 빌드한 이 소스 트리에서는 cfg 수정만으로 재빌드할 필요가 없습니다. 다른 cfg 경로를 선택할 때는 드라이버 프로세스를 종료하고, 리셋 후 다음처럼 실행합니다.
 
 ```bash
+cd ~/radar_projects/awr2944p_ros2_driver
 bash tools/run_ethernet.sh config_file:=/absolute/path/my_radar.cfg \
   cli_port:=/dev/ttyACM0 auto_start:=true max_run_seconds:=0.0
 ```
@@ -222,6 +245,6 @@ colcon test-result --verbose
 
 테스트는 합성 데이터·PTY·localhost TCP를 사용합니다. 실제 보드 제어는 하지 않습니다. 실제 센서 검증용 `tools/verify_live_ros2.py`는 시작/정지 서비스를 호출하므로 자동 테스트와 구분합니다. [검증 범위와 한계](docs/validation.md)를 확인하세요.
 
-## 라이선스와 근거
+## License
 
 드라이버·도구·문서는 [Apache-2.0](LICENSE)입니다. TI SDK와 펌웨어는 TI 배포처에서 별도로 받습니다. 프로토콜과 cfg의 기준은 [TI mmWave MCU+ SDK](https://www.ti.com/tool/MMWAVE-MCUPLUS-SDK)이며, 보드 자료는 [AWR2944PEVM](https://www.ti.com/tool/AWR2944PEVM)에 있습니다. TI SDK·펌웨어에는 각 배포물의 라이선스가 적용됩니다.

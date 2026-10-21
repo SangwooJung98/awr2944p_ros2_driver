@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Start an idle ROS node with only the capability needed to bind TI TCP port 7.
-# This does not change NIC addresses, flash firmware, or start RF automatically.
+# auto_start:=true explicitly enables RF; NIC and firmware setup are separate.
 set -euo pipefail
 radar_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if [[ ${1:-} == --help ]]; then
     printf '%s\n' 'Usage: bash tools/run_ethernet.sh [ROS launch name:=value ...]' \
         'Requires the sensor-facing NIC to have 192.168.1.10/24 and Ethernet firmware.' \
         'Uses a transient systemd service as the current user with CAP_NET_BIND_SERVICE.' \
-        'Starts idle; call /radar/start separately. RViz runs separately in your desktop.'
+        'Starts idle by default; pass auto_start:=true or call /radar/start.' \
+        'RViz runs separately in your desktop.'
     exit 0
 fi
 if [[ ! -f "$radar_root/ros2_ws/install/setup.bash" ]]; then

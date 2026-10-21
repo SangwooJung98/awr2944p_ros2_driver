@@ -5,7 +5,7 @@
   <description>AWR2944P SDK DDM point clouds over USB UART and TI Ethernet TCP.</description>
   <maintainer email="SangwooJung98@users.noreply.github.com">SangwooJung98</maintainer>
   <license>Apache-2.0</license>
-  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>rcl_interfaces</exec_depend>
@@ -16,6 +16,7 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ros2launch</exec_depend>
   <exec_depend>python3-serial</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>

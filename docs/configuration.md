@@ -50,10 +50,10 @@ antGeometryCfg 1 0 1 1 1 2 1 3 0 2 0 3 0 4 0 5 1 4 1 5 1 6 1 7 1 8 1 9 1 10 1 11
 
 1. `/radar/stop`으로 측정을 정지하고 diagnostics에서 정지 확인.
 2. cfg를 저장.
-3. Ethernet에서는 SW1/NRST 리셋.
+3. USB·Ethernet 모두 SW1/NRST 리셋.
 4. `/radar/start` 요청 후 diagnostics가 `running`인지 확인.
 
-현재 cfg 경로의 내용은 시작할 때 다시 읽습니다. 경로 자체인 `config_file` 파라미터는 실행 중 변경할 수 없으므로, 다른 경로를 선택하려면 노드를 재시작합니다. 일반 설치에서 소스 cfg와 설치 cfg가 복사본이면 재빌드하거나 원하는 파일을 절대 경로로 지정합니다.
+리셋된 보드에 설정할 때 현재 cfg 파일을 다시 읽습니다. UART에서 리셋 없이 정지 후 시작하면 보드의 기존 설정을 재사용하므로 수정한 cfg가 적용되지 않습니다. 경로 자체인 `config_file` 파라미터는 실행 중 변경할 수 없으므로, 다른 경로를 선택하려면 노드를 재시작합니다. 일반 설치에서 소스 cfg와 설치 cfg가 복사본이면 재빌드하거나 원하는 파일을 절대 경로로 지정합니다.
 
 드라이버는 cfg의 `sensorStart`, `sensorStop`, `enetStreamCfg`, `configDataPort`를 직접 실행하지 않고 연결 순서에 맞게 제어합니다. Ethernet 목적지 IP는 cfg 대신 `host_ip` launch 파라미터로 지정합니다. stock 펌웨어의 포트는 TCP 7이며 `tcp_port:=7007`만으로 펌웨어 포트를 바꿀 수 없습니다.
 

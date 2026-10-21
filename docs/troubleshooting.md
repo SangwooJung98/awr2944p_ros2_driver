@@ -5,7 +5,7 @@
 | `/dev/ttyACM*` 접근 거부 | 실제 포트, `dialout` 그룹, 재로그인 또는 임시 ACL 확인 |
 | `No mmWave CLI prompt` | 12 V, J8, S1=XDS, 실행 점퍼, CLI 포트 번호 확인 |
 | `no enetStreamCfg` | UART 앱일 수 있음. AWR2x44P DDM_ENET 펌웨어 확인 |
-| `Cannot assign requested address` | 센서 NIC에 `192.168.1.10/24`가 있는지 확인. 어댑터 교체 시 NIC 이름 변경 |
+| `Cannot assign requested address` | 해당 PC의 센서 NIC에 `192.168.1.10/24`가 있는지 확인 |
 | TCP 7 바인드 `Permission denied` | `tools/run_ethernet.sh` 사용. 시스템 Python에 전역 capability를 부여하지 않음 |
 | `Unit awr2944-ethernet... already exists` | 기존 프로세스가 실행 중. 리셋 후 `/radar/start`를 사용하거나 기존 서비스를 종료 |
 | `Reset the board before a new Ethernet session` | SW1/NRST 리셋 후 시작 |
@@ -25,9 +25,7 @@ ss -tn '( sport = :7 )'
 journalctl -k --since '5 minutes ago'
 ```
 
-USB-LAN이 사라졌다 재인식되거나 `device descriptor`, `Tx status -71` 등이 보이면 PC의 USB 연결 경로를 점검합니다. USB 허브를 거치지 않고 본체 포트에 직접 연결하고, 케이블·포트·어댑터를 하나씩 바꿔 비교할 수 있습니다. 이 로그만으로 단일 부품의 고장을 확정할 수는 없습니다.
-
-원인이 해결되면 센서를 리셋하고 `/radar/start`를 호출합니다. 단순히 `data_timeout`을 늘리는 것은 USB 분리나 stock 펌웨어의 재접속 제한을 해결하지 않습니다.
+통신 설정을 확인한 뒤 센서를 리셋하고 `/radar/start`를 호출합니다. stock Ethernet 펌웨어의 새 연결에는 보드 리셋이 필요합니다.
 
 ## 화면 깜박임과 실제 수신 중단 구분
 

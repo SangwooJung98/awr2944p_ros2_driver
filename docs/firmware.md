@@ -11,7 +11,7 @@
 | J9 | PC의 센서 전용 Ethernet NIC |
 | SW1/NRST | 리셋 |
 
-Ethernet 모드도 USB CLI가 필요합니다. USB-LAN 어댑터로 추가 NIC를 사용할 수 있습니다. 실제 시험에서는 어댑터 분리·USB 프로토콜 오류가 있었으므로 허브, 전원, 포트, 케이블 접촉 상태를 확인합니다.
+Ethernet 모드도 USB CLI가 필요합니다. USB-LAN 어댑터로 추가 NIC를 사용할 수 있습니다.
 
 ## 펌웨어 선택
 

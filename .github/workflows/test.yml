@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-24.04
     container: ros:jazzy-ros-base
     timeout-minutes: 15
+    strategy:
+      matrix:
+        install: [symlink, copy]
     env:
       ROS_DOMAIN_ID: '173'
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
@@ -18,13 +21,23 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y python3-colcon-common-extensions python3-pytest python3-serial ros-jazzy-rviz2 ros-jazzy-tf2-ros ros-jazzy-diagnostic-msgs
+          apt-get install -y python3-colcon-common-extensions python3-rosdep
+          if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+            rosdep init
+          fi
+          rosdep update --rosdistro jazzy
+          rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
+          rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro jazzy
       - name: Check fixtures and build
         run: |
           python3 tools/generate_sample.py --check
           source /opt/ros/jazzy/setup.bash
           cd ros2_ws
-          colcon build --symlink-install --packages-select awr2944_driver
+          if [ '${{ matrix.install }}' = symlink ]; then
+            colcon build --symlink-install --packages-select awr2944_driver
+          else
+            colcon build --packages-select awr2944_driver
+          fi
       - name: Test without radar hardware
         run: |
           source /opt/ros/jazzy/setup.bash
@@ -32,3 +45,14 @@ jobs:
           cd ros2_ws
           colcon test --packages-select awr2944_driver --event-handlers console_direct+
           colcon test-result --verbose
+      - name: Check installed launch and point clouds outside the source tree
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source ros2_ws/install/setup.bash
+          cp tools/check_install.py /tmp/check_install.py
+          if [ '${{ matrix.install }}' = copy ]; then
+            mv ros2_ws/src ros2_ws/src.hidden
+            mv ros2_ws/build ros2_ws/build.hidden
+          fi
+          cd /tmp
+          python3 check_install.py
