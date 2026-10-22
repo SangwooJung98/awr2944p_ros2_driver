@@ -2,12 +2,22 @@
 
 2026-10-22 기준입니다. 이 문서는 Humble 포팅 검증과 기반 Jazzy 버전의 기존 기록을 구분합니다.
 
-## Humble 포팅
+## Humble 포팅과 자동 테스트 (2026-10-22)
 
 - Ubuntu 24.04 호스트에 Docker Engine을 설치하고 공식 `ros:humble-ros-base-jammy`로 Ubuntu 22.04 / ROS 2 Humble 이미지를 빌드했습니다.
 - 이미지 안에서 `rosdep install`, `rosdep check`, colcon 빌드가 통과했습니다. cfg·launch·RViz·합성 데이터가 이미지에 포함됩니다.
-- 로컬 자동 테스트와 Humble 실제 센서 수신 검증은 진행 중입니다. 아래의 기존 실측 수치는 Jazzy에서 얻은 결과입니다.
-- GitHub Actions는 Humble 컨테이너의 symlink 설치·일반 설치 테스트와 별도 Docker 이미지 빌드·실행 검사를 수행합니다.
+- 로컬 Docker 환경의 Python 3.10.12에서 **43개 테스트 통과, 실패·오류·건너뜀 0개**를 확인했습니다. 설치 경로 밖에서 실행한 재생 검사는 20프레임·600포인트·10.0 Hz였습니다.
+- GitHub Actions의 Humble symlink 설치·일반 복사 설치·Docker 이미지 빌드 및 실행 검사가 모두 통과했습니다. 일반 복사 설치는 원본 소스와 빌드 디렉터리를 치운 뒤에도 실행을 검증합니다. [포팅 CI 기록](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/runs/39715686899)
+- 별도 RViz 컨테이너의 X11 인증, OpenGL 4.5 초기화, `/radar/points`의 Best Effort 구독 연결을 확인했습니다. GUI를 호스트 UID/GID로 실행하고 컨테이너 안의 쓰기 가능한 경로에 설정을 저장하도록 수정했습니다. 합성 재생과 RViz의 정상 시작·종료도 확인했습니다. 화면을 직접 관찰하는 시각 검사는 수행하지 않았습니다.
+
+## Humble 실제 레이더 측정 (2026-10-22)
+
+- AWR2944PEVM / AWR2944P, SDK 4.7.2.1 DDM_ENET 펌웨어, 공개 `ethernet_4_7_2.cfg`를 사용했습니다. USB CLI와 Ethernet 데이터 수신을 Humble Docker 안에서 실행했습니다.
+- 약 30초 측정에서 PointCloud2 **302프레임·14,064포인트, 평균 10.0033 Hz**를 받았습니다. 프레임당 포인트는 30~62개이며 빈 프레임은 없었습니다.
+- 파싱 오류, 버린 바이트, ROS 발행 큐 드롭은 모두 0이었습니다. 검증 도구의 오류 목록은 비어 있었고, 종료 후 `state=stopped`, `stop_confirmed=True` 및 센서 상태 3을 확인했습니다.
+- Ethernet 포맷은 센서 프레임 번호와 온도를 제공하지 않습니다. 이 결과만으로 센서 내부 프레임 누락이나 온도를 판정하지 않습니다.
+- 종료 시 펌웨어가 Doppler/Azimuth FFT clipping 91회를 보고했습니다. 수신·ROS 변환 오류는 없었지만 이 환경에서의 RF 신호 포화 여부와 cfg 튜닝은 별도 확인이 필요합니다. 포팅 중 기존 RF cfg를 변경하지 않았습니다.
+- Humble에서 UART 실물 측정, 다른 물리 PC 및 장시간·고온 조건은 검증하지 않았습니다. UART 파서·CLI 세션은 자동 테스트로 검증했습니다.
 
 ## 기반 Jazzy 버전의 실제 보드 기록 (2026-10-21)
 

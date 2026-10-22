@@ -52,7 +52,11 @@ if [[ $radar_mode == replay || $radar_mode == rviz ]]; then
         printf '%s\n' 'No Xauthority cookie for DISPLAY; run from your desktop terminal.' >&2
         exit 1
     fi
-    radar_options+=(--env "DISPLAY=$DISPLAY" --env XAUTHORITY=/tmp/radar.xauth \
+    # Match the cookie owner; capabilities are dropped, so container root cannot
+    # read the host user's mode-0600 Xauthority file.
+    radar_options+=(--user "$(id -u):$(id -g)" \
+        --env HOME=/tmp/radar-config \
+        --env "DISPLAY=$DISPLAY" --env XAUTHORITY=/tmp/radar.xauth \
         --env QT_X11_NO_MITSHM=1 --env LIBGL_ALWAYS_SOFTWARE=1 \
         --mount 'type=bind,src=/tmp/.X11-unix,dst=/tmp/.X11-unix,readonly' \
         --mount "type=bind,src=$radar_cookie,dst=/tmp/radar.xauth,readonly")

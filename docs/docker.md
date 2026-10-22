@@ -46,7 +46,7 @@ export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1
 bash tools/docker_humble.sh rviz
 ```
 
-RViz는 Humble 컨테이너 안에서 실행하며 Doppler `velocity` 색상과 Decay Time 0을 사용합니다. 현재 데스크톱의 Xauthority 쿠키를 임시 파일로 전달하고 종료 시 삭제합니다. `xhost +` 설정은 필요하지 않습니다. 기본 렌더링은 소프트웨어 OpenGL입니다.
+RViz는 Humble 컨테이너 안에서 실행하며 Doppler `velocity` 색상과 Decay Time 0을 사용합니다. 현재 데스크톱의 Xauthority 쿠키를 임시 파일로 전달하고 종료 시 삭제합니다. GUI 컨테이너는 호스트 사용자와 같은 UID/GID로 실행하며 설정은 컨테이너의 `/tmp/radar-config`에 저장합니다. `xhost +` 설정은 필요하지 않습니다. 기본 렌더링은 소프트웨어 OpenGL입니다.
 
 ## USB UART 측정
 
