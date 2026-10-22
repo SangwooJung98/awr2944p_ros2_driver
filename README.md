@@ -1,6 +1,6 @@
 # AWR2944P ROS 2 Humble Driver
 
-[![ROS 2 Humble tests](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml/badge.svg?branch=humble)](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml?query=branch%3Ahumble)
+[![ROS 2 Humble tests](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/humble.yml/badge.svg?branch=humble)](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/humble.yml?query=branch%3Ahumble)
 
 TI **AWR2944PEVM / AWR2944P**의 DDM 포인트클라우드를 ROS 2 `PointCloud2`로 발행하는 커뮤니티 드라이버입니다. USB UART, TI DDM_ENET TCP, 저장된 UART 데이터 재생을 지원합니다. **TI 공식 ROS 드라이버가 아닙니다.**
 
