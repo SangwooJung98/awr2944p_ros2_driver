@@ -1,0 +1,12 @@
+**
+!docker/
+!docker/**
+!tools/
+!tools/**
+!ros2_ws/
+!ros2_ws/src/
+!ros2_ws/src/**
+**/__pycache__/
+**/.pytest_cache/
+**/*.pyc
+**/*.egg-info/

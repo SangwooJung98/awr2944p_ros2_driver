@@ -1,16 +1,18 @@
-# AWR2944P ROS 2 Driver
+# AWR2944P ROS 2 Humble Driver
 
-[![ROS 2 Jazzy tests](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml/badge.svg)](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml)
+[![ROS 2 Humble tests](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml/badge.svg?branch=humble)](https://github.com/SangwooJung98/awr2944p_ros2_driver/actions/workflows/test.yml?query=branch%3Ahumble)
 
 TI **AWR2944PEVM / AWR2944P**의 DDM 포인트클라우드를 ROS 2 `PointCloud2`로 발행하는 커뮤니티 드라이버입니다. USB UART, TI DDM_ENET TCP, 저장된 UART 데이터 재생을 지원합니다. **TI 공식 ROS 드라이버가 아닙니다.**
 
-[English quick start](docs/README.en.md) · [cfg 설정](docs/configuration.md) · [펌웨어·배선](docs/firmware.md) · [문제 해결](docs/troubleshooting.md) · [검증 범위](docs/validation.md)
+이 문서는 **`humble` 브랜치** 기준입니다. Ubuntu 22.04에 직접 설치하거나, Linux PC에서 Ubuntu 22.04 / Humble Docker 컨테이너로 실행합니다. Jazzy 버전은 [`main`](https://github.com/SangwooJung98/awr2944p_ros2_driver/tree/main)에 있습니다.
+
+[English quick start](docs/README.en.md) · [Docker 사용법](docs/docker.md) · [cfg 설정](docs/configuration.md) · [펌웨어·배선](docs/firmware.md) · [문제 해결](docs/troubleshooting.md) · [검증 범위](docs/validation.md)
 
 ## 지원 범위
 
 | 항목 | 내용 |
 |---|---|
-| 개발 환경 | Ubuntu 24.04, ROS 2 Jazzy, Python 3.12 |
+| 개발 환경 | Ubuntu 22.04, ROS 2 Humble, Python 3.10 |
 | 보드 | AWR2944PEVM / AWR2944P |
 | Ethernet | SDK 4.7.2.1 AWR2x44P DDM_ENET 앱, 10 Hz 예제 |
 | USB | SDK 4.6.2.1 UART DDM 전송 검증. 공개 USB cfg는 안테나 수정 후 실측 재검증 전 |
@@ -19,26 +21,47 @@ TI **AWR2944PEVM / AWR2944P**의 DDM 포인트클라우드를 ROS 2 `PointCloud2
 
 Ethernet 포인트 수신은 실물 보드에서 확인했습니다. 각도·거리의 절대 정확도와 개별 보드 보정은 검증 범위에 포함되지 않습니다. AWR2944, AWR2E44P, AWR1843, IWR6843에 이 cfg를 그대로 사용하지 마세요.
 
-## 1. 설치와 빌드
+## Docker로 시작
 
-[ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)가 설치된 **Ubuntu 24.04**에서 실행합니다. ROS 설치는 `ros-jazzy-desktop` 또는 `ros-jazzy-ros-base`를 사용하며, RViz 등 패키지 의존성은 아래 `rosdep install`이 설치합니다. RViz 창을 보려면 GUI 세션이 필요합니다. Ethernet 실행 스크립트는 systemd가 실행 중인 Ubuntu와 sudo를 사용합니다. NIC 설정 예제는 NetworkManager의 `nmcli` 기준입니다.
+호스트가 Ubuntu 24.04라면 이 방법으로 Humble을 실행합니다. 호스트에 Humble을 설치하거나 Jazzy 환경을 source할 필요가 없습니다. 먼저 [Docker Engine](https://docs.docker.com/engine/install/ubuntu/)을 설치한 뒤:
+
+```bash
+git clone --branch humble https://github.com/SangwooJung98/awr2944p_ros2_driver.git
+cd awr2944p_ros2_driver
+bash tools/docker_humble.sh build
+bash tools/docker_humble.sh test
+```
+
+보드와 NIC를 아래 안내대로 연결·설정한 뒤, 리셋하고 실행합니다.
+
+```bash
+bash tools/docker_humble.sh ethernet auto_start:=true max_run_seconds:=0.0
+# 다른 데스크톱 터미널에서 같은 저장소로 이동한 뒤:
+bash tools/docker_humble.sh rviz
+```
+
+USB 포트 지정, cfg 수정, 정지·재시작, 센서 없는 재생은 [Docker 사용법](docs/docker.md)에 있습니다. 아래의 직접 설치 및 `run_ethernet.sh` 명령은 **Ubuntu 22.04에 Humble을 직접 설치한 경우**에 사용합니다.
+
+## 1. Ubuntu 22.04에 직접 설치
+
+[ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)가 설치된 **Ubuntu 22.04**에서 실행합니다. ROS 설치는 `ros-humble-desktop` 또는 `ros-humble-ros-base`를 사용하며, RViz 등 패키지 의존성은 아래 `rosdep install`이 설치합니다. RViz 창을 보려면 GUI 세션이 필요합니다. Ethernet 실행 스크립트는 systemd가 실행 중인 Ubuntu와 sudo를 사용합니다. NIC 설정 예제는 NetworkManager의 `nmcli` 기준입니다.
 
 ```bash
 sudo apt update
 sudo apt install git python3-colcon-common-extensions python3-rosdep
 mkdir -p ~/radar_projects
 cd ~/radar_projects
-git clone https://github.com/SangwooJung98/awr2944p_ros2_driver.git
+git clone --branch humble https://github.com/SangwooJung98/awr2944p_ros2_driver.git
 cd awr2944p_ros2_driver
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
 ```
 
 rosdep을 처음 사용하는 PC는 `sudo rosdep init`을 한 번 실행합니다. 이후:
 
 ```bash
-rosdep update --rosdistro jazzy
-rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
-rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro jazzy
+rosdep update --rosdistro humble
+rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro humble
+rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro humble
 cd ros2_ws
 colcon build --symlink-install --packages-select awr2944_driver
 source install/setup.bash
@@ -47,12 +70,12 @@ source install/setup.bash
 **아래 ROS 명령을 실행할 모든 새 터미널**에 같은 환경을 적용합니다. 복제 위치가 다르면 두 번째 경로를 바꿉니다.
 
 ```bash
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
 source ~/radar_projects/awr2944p_ros2_driver/ros2_ws/install/setup.bash
-export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1
 ```
 
-`LOCALHOST`는 같은 PC에서 노드와 RViz를 실행하는 예제용입니다. 다른 PC와 DDS로 통신하려면 양쪽의 ROS 도메인과 discovery 설정을 맞춥니다.
+`ROS_LOCALHOST_ONLY=1`은 같은 PC에서 노드와 RViz를 실행하는 예제용입니다. 다른 PC와 DDS로 통신하려면 양쪽에서 `ROS_LOCALHOST_ONLY=0`과 동일한 ROS_DOMAIN_ID를 사용하고 네트워크를 설정합니다.
 
 ### 다른 PC에서 사용할 때
 
@@ -67,7 +90,7 @@ export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
 | 센서 네트워크 | 다른 NIC/VPN과 `192.168.1.0/24`가 겹치지 않는 환경, 센서에서 PC로 들어오는 TCP 7 허용 |
 | ROS 터미널 | ROS와 이번 clone의 `install/setup.bash`를 source하고 같은 ROS_DOMAIN_ID 사용 |
 
-`/dev/ttyACM0`, `/dev/ttyACM1`과 IP는 예제 기본값입니다. NIC의 MAC 주소나 보드의 USB 시리얼 번호는 코드에 고정되어 있지 않습니다. 이 안내의 검증 대상은 Ubuntu 24.04 / ROS 2 Jazzy이며 Windows·macOS·다른 ROS 배포판은 검증하지 않았습니다.
+`/dev/ttyACM0`, `/dev/ttyACM1`과 IP는 예제 기본값입니다. NIC의 MAC 주소나 보드의 USB 시리얼 번호는 코드에 고정되어 있지 않습니다. 이 안내의 검증 대상은 Ubuntu 22.04 / ROS 2 Humble이며 Windows·macOS·다른 ROS 배포판은 검증하지 않았습니다.
 
 ## 2. 센서 없이 RViz 확인
 
@@ -146,7 +169,7 @@ ping -c 3 192.168.1.200
 
 ```bash
 cd ~/radar_projects/awr2944p_ros2_driver
-export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1
 bash tools/run_ethernet.sh auto_start:=true max_run_seconds:=0.0 \
   connect_timeout:=20.0 cli_port:=/dev/ttyACM0
 ```
@@ -235,9 +258,9 @@ Ethernet에는 SNR·noise·온도·센서 시간·센서 프레임 번호가 없
 ```bash
 cd ~/radar_projects/awr2944p_ros2_driver
 python3 tools/generate_sample.py --check
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
 source ros2_ws/install/setup.bash
-export ROS_DOMAIN_ID=173 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=173 ROS_LOCALHOST_ONLY=1
 cd ros2_ws
 colcon test --packages-select awr2944_driver --event-handlers console_direct+
 colcon test-result --verbose

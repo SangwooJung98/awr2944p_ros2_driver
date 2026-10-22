@@ -1,0 +1,28 @@
+FROM ros:humble-ros-base-jammy
+
+SHELL ["/bin/bash", "-c"]
+COPY ros2_ws/src/awr2944_driver/package.xml /tmp/rosdeps/awr2944_driver/package.xml
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       python3-colcon-common-extensions python3-rosdep ros-humble-rmw-cyclonedds-cpp \
+    && if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi \
+    && rosdep update --rosdistro humble \
+    && rosdep install --from-paths /tmp/rosdeps --ignore-src -r -y --rosdistro humble \
+    && rosdep check --from-paths /tmp/rosdeps --ignore-src --rosdistro humble \
+    && rm -rf /var/lib/apt/lists/* /tmp/rosdeps
+
+WORKDIR /opt/awr2944/ros2_ws
+COPY ros2_ws/src/ src/
+RUN source /opt/ros/humble/setup.bash \
+    && colcon build --packages-select awr2944_driver
+COPY tools/ /opt/awr2944/tools/
+COPY docker/entrypoint.sh /opt/awr2944/entrypoint.sh
+RUN chmod +x /opt/awr2944/entrypoint.sh
+
+ENV ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1 RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+    ROS_HOME=/tmp/ros ROS_LOG_DIR=/tmp/ros/log \
+    XDG_CACHE_HOME=/tmp/radar-cache XDG_CONFIG_HOME=/tmp/radar-config
+WORKDIR /opt/awr2944
+STOPSIGNAL SIGINT
+ENTRYPOINT ["/opt/awr2944/entrypoint.sh"]
+CMD ["ros2", "launch", "awr2944_driver", "replay.launch.py", "rviz:=false", "replay_loop:=true"]

@@ -1,18 +1,18 @@
-name: ROS 2 Jazzy tests
+name: ROS 2 Humble tests
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
   test:
     runs-on: ubuntu-24.04
-    container: ros:jazzy-ros-base
+    container: ros:humble-ros-base-jammy
     timeout-minutes: 15
     strategy:
       matrix:
         install: [symlink, copy]
     env:
       ROS_DOMAIN_ID: '173'
-      ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+      ROS_LOCALHOST_ONLY: '1'
     defaults:
       run:
         shell: bash
@@ -25,13 +25,13 @@ jobs:
           if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
             rosdep init
           fi
-          rosdep update --rosdistro jazzy
-          rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
-          rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro jazzy
+          rosdep update --rosdistro humble
+          rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro humble
+          rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro humble
       - name: Check fixtures and build
         run: |
           python3 tools/generate_sample.py --check
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           cd ros2_ws
           if [ '${{ matrix.install }}' = symlink ]; then
             colcon build --symlink-install --packages-select awr2944_driver
@@ -40,14 +40,14 @@ jobs:
           fi
       - name: Test without radar hardware
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
           cd ros2_ws
           colcon test --packages-select awr2944_driver --event-handlers console_direct+
           colcon test-result --verbose
       - name: Check installed launch and point clouds outside the source tree
         run: |
-          source /opt/ros/jazzy/setup.bash
+          source /opt/ros/humble/setup.bash
           source ros2_ws/install/setup.bash
           cp tools/check_install.py /tmp/check_install.py
           if [ '${{ matrix.install }}' = copy ]; then
@@ -56,3 +56,12 @@ jobs:
           fi
           cd /tmp
           python3 check_install.py
+  docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the documented Humble Docker image
+        run: bash tools/docker_humble.sh build
+      - name: Test the documented Docker runner without radar hardware
+        run: bash tools/docker_humble.sh test

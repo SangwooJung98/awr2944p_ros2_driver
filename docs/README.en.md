@@ -1,31 +1,50 @@
-# AWR2944P ROS 2 driver — quick start
+# AWR2944P ROS 2 Humble driver — quick start
 
-Community driver for **TI AWR2944PEVM / AWR2944P**, tested with Ubuntu 24.04 and ROS 2 Jazzy. Supports UART TLVs, the TI DDM_ENET TCP stream, and synthetic replay. This is not an official TI ROS driver.
+Community driver for **TI AWR2944PEVM / AWR2944P**, tested with Ubuntu 22.04 and ROS 2 Humble. Supports UART TLVs, the TI DDM_ENET TCP stream, and synthetic replay. This is not an official TI ROS driver.
+
+This is the **`humble` branch**. The Jazzy version remains on [`main`](https://github.com/SangwooJung98/awr2944p_ros2_driver/tree/main). On an Ubuntu 24.04 host, use the Humble Docker image rather than installing Humble packages on the host.
 
 The default Ethernet profile targets **SDK 4.7.2.1 DDM_ENET, 10 Hz**. UART reception was tested with SDK 4.6.2.1; the public UART profile has since been corrected to the AWR2944P antenna layout and has not been revalidated on hardware. Per-board calibration is unverified.
 
-## Build
+## Docker on a Linux host
 
-Install [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html) on **Ubuntu 24.04** first (`ros-jazzy-desktop` or `ros-jazzy-ros-base`). The Ethernet helper requires a running systemd system and sudo. RViz requires a graphical desktop; the installation check below runs headlessly. Then:
+Install [Docker Engine](https://docs.docker.com/engine/install/ubuntu/), then:
+
+```bash
+git clone --branch humble https://github.com/SangwooJung98/awr2944p_ros2_driver.git
+cd awr2944p_ros2_driver
+bash tools/docker_humble.sh build
+bash tools/docker_humble.sh test
+# After connecting the board, configuring the sensor NIC and resetting the board:
+bash tools/docker_humble.sh ethernet auto_start:=true max_run_seconds:=0.0
+# In another desktop terminal at the repository root:
+bash tools/docker_humble.sh rviz
+```
+
+The image includes Humble, Cyclone DDS, RViz and the installed driver. It uses host networking, selected serial devices and a read-only cfg directory. No privileged container or host ROS installation is required. The helper uses sudo if your account cannot access Docker. See the [Docker guide](docker.md) for serial overrides, configuration, stop/start and GUI setup.
+
+## Native build on Ubuntu 22.04
+
+Install [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) on **Ubuntu 22.04** first (`ros-humble-desktop` or `ros-humble-ros-base`). The Ethernet helper requires a running systemd system and sudo. RViz requires a graphical desktop; the installation check below runs headlessly. Then:
 
 ```bash
 sudo apt update
 sudo apt install git python3-colcon-common-extensions python3-rosdep
-git clone https://github.com/SangwooJung98/awr2944p_ros2_driver.git
+git clone --branch humble https://github.com/SangwooJung98/awr2944p_ros2_driver.git
 cd awr2944p_ros2_driver
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/humble/setup.bash
 ```
 
 On a PC where rosdep has not been initialized, run `sudo rosdep init` once. Then:
 
 ```bash
-rosdep update --rosdistro jazzy
-rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro jazzy
-rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro jazzy
+rosdep update --rosdistro humble
+rosdep install --from-paths ros2_ws/src --ignore-src -r -y --rosdistro humble
+rosdep check --from-paths ros2_ws/src --ignore-src --rosdistro humble
 cd ros2_ws
 colcon build --symlink-install --packages-select awr2944_driver
 source install/setup.bash
-export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1
 ```
 
 Source the ROS and workspace setup files and use the same ROS domain in every terminal.
@@ -51,7 +70,7 @@ Configure only the sensor-facing NIC to `192.168.1.10/24`, with no default route
 Reset the board, then run from the repository root:
 
 ```bash
-export ROS_DOMAIN_ID=0 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=0 ROS_LOCALHOST_ONLY=1
 bash tools/run_ethernet.sh cli_port:=/dev/ttyACM0 \
   auto_start:=true max_run_seconds:=0.0 connect_timeout:=20.0
 ```
@@ -100,7 +119,7 @@ Stop measurement, edit the default cfg, reset the board, and start again. Reset 
 ```bash
 # From the repository root, with ROS and workspace sourced:
 python3 tools/generate_sample.py --check
-export ROS_DOMAIN_ID=173 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+export ROS_DOMAIN_ID=173 ROS_LOCALHOST_ONLY=1
 cd ros2_ws
 colcon test --packages-select awr2944_driver --event-handlers console_direct+
 colcon test-result --verbose

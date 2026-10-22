@@ -23,7 +23,7 @@ def main():
                         help='Unused ROS domain for this check (default: 174)')
     args = parser.parse_args()
     os.environ['ROS_DOMAIN_ID'] = str(args.ros_domain_id)
-    os.environ['ROS_AUTOMATIC_DISCOVERY_RANGE'] = 'LOCALHOST'
+    os.environ['ROS_LOCALHOST_ONLY'] = '1'
     share = Path(get_package_share_directory('awr2944_driver'))
     resources = ['package.xml', 'LICENSE', 'rviz/radar.rviz',
                  'config/ethernet_4_7_2.cfg', 'config/usb_4_6_2.cfg',

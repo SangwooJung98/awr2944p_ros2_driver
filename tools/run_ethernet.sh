@@ -26,7 +26,7 @@ exec sudo systemd-run --unit=awr2944-ethernet --collect --pty --wait \
     --property=NoNewPrivileges=yes --property=KillSignal=SIGINT \
     --property=TimeoutStopSec=35 \
     --setenv="HOME=$HOME" --setenv="ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}" \
-    --setenv="ROS_AUTOMATIC_DISCOVERY_RANGE=${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}" \
+    --setenv="ROS_LOCALHOST_ONLY=${ROS_LOCALHOST_ONLY:-1}" \
     --working-directory="$radar_root" \
     /bin/bash "$radar_root/tools/ros_env_exec.sh" \
     ros2 launch awr2944_driver ethernet.launch.py rviz:=false "$@"
